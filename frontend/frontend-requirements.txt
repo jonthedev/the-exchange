@@ -1,0 +1,43 @@
+Create a simplified cryptocurrency exchange order entry form and an order book view.
+
+The order entry form and the order book should be shown together in one view of a single-page application, and should properly interact (e.g. placing an order via the form should affect the order book display).
+
+Use TypeScript and Vue 3 Composition API for the front-end code. It’s a requirement to use these. Please don’t use any other 3rd party dependencies, keep it simple.
+
+
+
+Task 1: Order entry form
+
+Build an order form that allows a user to submit a limit order.
+
+A user should be able to place buy or sell orders, specifying a price and an amount to trade.
+
+Task 2: Order book
+
+Build an order book view.
+
+The order book displays price and aggregated amount of all orders in the exchange. For each price level it will also show the total amount added up for all orders of that price.
+
+The view can be optionally grouped by price. User should be able to select group size from a pre-defined set. E.g. the user can select group size of 100, that would mean that that orders with prices in ranges 0-100, 100-200 and so on are aggregated per range.
+
+The order book should consist of:
+
+• A scrollable top part that displays all aggregated sell orders.
+
+• A fixed mid part that displays the current mark price (average price
+between best sell and buy orders).
+
+• A scrollable bottom part that displays all aggregated buy orders.
+
+• A selection control for group size (e.g. a dropdown/select).
+
+The order book should fit to the browser window. The top and bottom part should only show a few rows of data, the rest can be viewed using a scrollbar.
+
+By default, and after changing the group size, the top part with sell orders should be scrolled to its bottom and the bottom part with buy orders should be scrolled to its top.
+
+This way the best buy and sell orders are displayed adjacent to the mark price.
+
+Task 3: Testing
+We also would like you to cover your code with automated tests. At Thalex we use Vitest for unit tests and Cypress for integration ones, but feel free to use any framework of your liking.
+
+You don’t need to cover everything, but think about what code you extract to cover it with unit tests, or if you’d want to use Cypress to do an integration test.
