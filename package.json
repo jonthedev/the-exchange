@@ -12,7 +12,9 @@
     "setup": "npm install && cd frontend && npm install && cd ../mock_backend && npm install",
     "clean": "rm -rf node_modules && rm -rf frontend/node_modules && rm -rf mock_backend/node_modules",
     "prepare": "husky install",
-    "postinstall": "husky install .husky"
+    "postinstall": "husky install .husky",
+    "test:e2e": "npm-run-all --parallel --race dev:backend frontend:e2e",
+    "frontend:e2e": "npm run test:e2e:dev -w frontend"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5",
