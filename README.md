@@ -23,7 +23,24 @@ A simplified cryptocurrency exchange order entry form and an order book view.
 - WebSocket (ws) implementation for real-time updates
 - CORS enabled for development
 
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- pnpm (v8 or higher)
+
+### Installation
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+```
+
 ## Setup
+
+**At the root of the project, run:**
 
 ```bash
 npm run setup
