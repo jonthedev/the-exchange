@@ -33,11 +33,12 @@ export function useOrderBook() {
       .sort((a, b) => (side === 'sell' ? a.price - b.price : b.price - a.price))
 
     let runningTotal = 0
-    const maxTotal = entries[entries.length - 1]?.amount || 0
+    const finalTotal = entries.reduce((sum, entry) => sum + entry.amount, 0)
+
     entries.forEach((entry) => {
       runningTotal += entry.amount
       entry.total = runningTotal
-      entry.depth = (entry.total / runningTotal) * 100
+      entry.depth = (runningTotal / finalTotal) * 100
     })
 
     return entries
