@@ -8,16 +8,18 @@ vi.mock('../../composables/useOrderBook', () => ({
     isConnected: true,
     error: '',
     sellOrders: [
-      { id: 1, side: 'sell', price: 20100, amount: 1.5 },
-      { id: 2, side: 'sell', price: 20200, amount: 1 },
+      { id: '1', side: 'sell', price: 20100, amount: 1.5 },
+      { id: '2', side: 'sell', price: 20200, amount: 1 },
     ],
     buyOrders: [
-      { id: 3, side: 'buy', price: 20000, amount: 2 },
-      { id: 4, side: 'buy', price: 19900, amount: 1 },
+      { id: '3', side: 'buy', price: 20000, amount: 2 },
+      { id: '4', side: 'buy', price: 19900, amount: 1 },
     ],
     markPrice: 20050,
     formatPrice: (price: number) => price.toFixed(2),
     formatAmount: (amount: number) => amount.toFixed(8),
+    groupSize: { value: 0.5 },
+    groupSizeOptions: [0.5, 1, 2.5, 5, 10, 25, 50, 100],
   }),
 }))
 
