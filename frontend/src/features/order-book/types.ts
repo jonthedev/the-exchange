@@ -1,7 +1,7 @@
 export type OrderSide = 'buy' | 'sell'
 
 export type Order = {
-  id: number
+  id: string
   side: OrderSide
   price: number
   amount: number
@@ -17,5 +17,7 @@ export type OrderResponse = {
 export type WebSocketUpdate = {
   existing?: Order[]
   insert?: Order[]
-  delete?: number[]
+  delete?: string[]
 }
+
+export type GroupSize = 0.5 | 1 | 2.5 | 5 | 10 | 25 | 50 | 100
