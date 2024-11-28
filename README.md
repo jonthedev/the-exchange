@@ -2,8 +2,6 @@
 
 A simplified cryptocurrency exchange order entry form and an order book view.
 
-## Features
-
 ### Technology Stack
 
 **Frontend**

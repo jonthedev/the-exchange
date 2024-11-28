@@ -6,7 +6,7 @@ import { ref } from '@/test/mocks/vue'
 beforeAll(() => {
   config.global.stubs = {
     transition: false,
-    'transition-group': false
+    'transition-group': false,
   }
 
   // Mock composables
@@ -15,7 +15,7 @@ beforeAll(() => {
       orders: ref([]),
       markPrice: ref(0),
       error: ref(null),
-      isConnected: ref(true)
-    })
+      isConnected: ref(true),
+    }),
   }))
 })

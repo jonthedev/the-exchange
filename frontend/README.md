@@ -1,5 +1,14 @@
 # frontend
 
+## Features
+
+- Real-time order book updates via WebSocket
+- Buy and sell order aggregation
+- Configurable price grouping
+- Mark price calculation (average between best buy/sell)
+- Responsive layout with scrollable order sections
+- Comprehensive test coverage (Unit + E2E)
+
 ## Customize configuration
 
 See [Vite Configuration Reference](https://vite.dev/config/).

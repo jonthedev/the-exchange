@@ -5,33 +5,33 @@ export default {
     extend: {
       colors: {
         // Core trading colors
-        'buy': {
+        buy: {
           light: '#4caf50',
           DEFAULT: '#388e3c',
-          dark: '#2e7d32'
+          dark: '#2e7d32',
         },
-        'sell': {
+        sell: {
           light: '#ef5350',
           DEFAULT: '#d32f2f',
-          dark: '#c62828'
+          dark: '#c62828',
         },
         // UI colors
-        'surface': {
+        surface: {
           DEFAULT: '#1a1a1a',
           light: '#242424',
-          dark: '#121212'
+          dark: '#121212',
         },
-        'border': {
+        border: {
           DEFAULT: '#333333',
           light: '#404040',
-          dark: '#262626'
-        }
+          dark: '#262626',
+        },
       },
       fontSize: {
-        'price': ['0.875rem', '1.25rem'], // For price displays
-        'amount': ['0.75rem', '1rem']      // For amount displays
-      }
-    }
+        price: ['0.875rem', '1.25rem'], // For price displays
+        amount: ['0.75rem', '1rem'], // For amount displays
+      },
+    },
   },
   plugins: [],
 }
