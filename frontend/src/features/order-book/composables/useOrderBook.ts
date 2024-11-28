@@ -1,46 +1,59 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import type { Order, WebSocketUpdate, GroupSize } from '../types'
+import type { Order, WebSocketUpdate, GroupSize, OrderSide } from '../types'
 
 export function useOrderBook() {
   const orders = ref<Order[]>([])
   const isConnected = ref(false)
-  const error = ref('')
-  const groupSize = ref<GroupSize>(0.5)
+  const error = ref<string>('')
+  const groupSize = ref<GroupSize>(1)
   let ws: WebSocket | null = null
 
-  const groupSizeOptions: GroupSize[] = [0.5, 1, 2.5, 5, 10, 25, 50, 100]
+  const groupSizeOptions = [1, 5, 10, 50, 100] as const
 
-  const groupOrders = (orders: Order[]) => {
+  const groupOrders = (orderList: Order[], side: OrderSide) => {
+    if (!orderList.length) return []
+
     const grouped = new Map<number, number>()
 
-    orders.forEach((order) => {
+    orderList.forEach((order) => {
       const groupedPrice = Math.floor(order.price / groupSize.value) * groupSize.value
       const currentAmount = grouped.get(groupedPrice) || 0
       grouped.set(groupedPrice, currentAmount + order.amount)
     })
 
-    return Array.from(grouped.entries()).map(([price, amount]) => ({
-      id: price.toString(),
-      price,
-      amount,
-      side: orders[0].side,
-    }))
+    const entries = Array.from(grouped.entries())
+      .map(([price, amount]) => ({
+        id: price.toString(),
+        price,
+        amount,
+        side,
+        total: 0,
+        depth: 0,
+      }))
+      .sort((a, b) => (side === 'sell' ? a.price - b.price : b.price - a.price))
+
+    let runningTotal = 0
+    const maxTotal = entries[entries.length - 1]?.amount || 0
+    entries.forEach((entry) => {
+      runningTotal += entry.amount
+      entry.total = runningTotal
+      entry.depth = (entry.total / runningTotal) * 100
+    })
+
+    return entries
   }
 
-  // Update computed properties to use grouping
   const sellOrders = computed(() => {
     const filtered = orders.value.filter((o) => o.side === 'sell')
-    const grouped = groupOrders(filtered)
-    return grouped.sort((a, b) => a.price - b.price).slice(0, 12)
+    return groupOrders(filtered, 'sell').slice(0, 12)
   })
 
   const buyOrders = computed(() => {
     const filtered = orders.value.filter((o) => o.side === 'buy')
-    const grouped = groupOrders(filtered)
-    return grouped.sort((a, b) => b.price - a.price).slice(0, 12)
+    return groupOrders(filtered, 'buy').slice(0, 12)
   })
 
-  const markPrice = computed(() => {
+  const markPrice = computed((): number | null => {
     const lowestSell = sellOrders.value[0]?.price
     const highestBuy = buyOrders.value[0]?.price
 
@@ -50,70 +63,69 @@ export function useOrderBook() {
     return null
   })
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number): string => {
     return price.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })
   }
 
-  const formatAmount = (amount: number) => {
+  const formatAmount = (amount: number): string => {
     return amount.toLocaleString('en-US', {
       minimumFractionDigits: 8,
       maximumFractionDigits: 8,
     })
   }
 
-  // WebSocket setup
   onMounted(() => {
-    ws = new WebSocket('ws://localhost:8080')
+    try {
+      ws = new WebSocket('ws://localhost:8080')
 
-    ws.onopen = () => {
-      isConnected.value = true
-    }
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data) as WebSocketUpdate
-
-      if (data.existing) {
-        orders.value = data.existing
+      ws.onopen = () => {
+        isConnected.value = true
+        error.value = ''
       }
-      if (data.insert) {
-        orders.value = [...orders.value, ...data.insert]
-      }
-      if (data.delete) {
-        orders.value = orders.value.filter((order) => !data.delete?.includes(order.id))
-      }
-    }
 
-    ws.onclose = () => {
-      isConnected.value = false
-    }
+      ws.onmessage = (event: MessageEvent) => {
+        const data = JSON.parse(event.data) as WebSocketUpdate
 
-    ws.onerror = () => {
-      error.value = 'Connection error'
+        if (data.existing) {
+          orders.value = data.existing
+        }
+        if (data.insert) {
+          orders.value = [...orders.value, ...data.insert]
+        }
+        if (data.delete) {
+          orders.value = orders.value.filter((order) => !data.delete?.includes(order.id))
+        }
+      }
+
+      ws.onclose = () => {
+        isConnected.value = false
+      }
+
+      ws.onerror = () => {
+        error.value = 'Connection error'
+      }
+    } catch (err) {
+      error.value = 'Failed to establish connection'
     }
   })
 
   onUnmounted(() => {
     ws?.close()
+    ws = null
   })
 
   return {
-    // State
     orders,
     isConnected,
     error,
-    ws,
     groupSize,
     groupSizeOptions,
-
-    // Computed
     sellOrders,
     buyOrders,
     markPrice,
-
-    // Methods
     formatPrice,
     formatAmount,
   }
