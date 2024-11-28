@@ -16,19 +16,15 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": [
-      "vue",
-      "vite/client",
-      "vitest/globals",
-      "@vue/test-utils"
-    ]
+    "types": ["vue", "vite/client", "cypress"]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "cypress/**/*.ts"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
