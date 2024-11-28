@@ -9,6 +9,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@backend/*": ["../mock_backend/*"]
-    }
+    },
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true
   }
 }
