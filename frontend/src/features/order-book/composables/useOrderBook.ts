@@ -86,6 +86,7 @@ export function useOrderBook() {
     orders,
     isConnected,
     error,
+    ws,
 
     // Computed
     sellOrders,
