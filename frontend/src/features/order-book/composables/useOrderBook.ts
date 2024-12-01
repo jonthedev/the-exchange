@@ -1,4 +1,4 @@
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { useWebSocket } from '../../../features/websocket/composables/useWebSocket'
 import type { Order, GroupSize, GroupedOrder } from '../types'
 
@@ -14,6 +14,9 @@ export function useOrderBook() {
 
     if (newData.existing) {
       orders.value = newData.existing
+      nextTick(() => {
+        scrollOrdersToCenter()
+      })
     }
     if (newData.insert) {
       orders.value = [...orders.value, ...newData.insert]
@@ -22,6 +25,24 @@ export function useOrderBook() {
       orders.value = orders.value.filter((order) => !newData.delete?.includes(order.id))
     }
   })
+
+  watch(groupSize, () => {
+    nextTick(() => {
+      scrollOrdersToCenter()
+    })
+  })
+
+  const scrollOrdersToCenter = () => {
+    const sellContainer = document.querySelector('[data-test="sell-orders"]')
+    const buyContainer = document.querySelector('[data-test="buy-orders"]')
+
+    if (sellContainer) {
+      sellContainer.scrollTop = sellContainer.scrollHeight
+    }
+    if (buyContainer) {
+      buyContainer.scrollTop = 0
+    }
+  }
 
   const groupOrders = (orders: Order[], side: 'buy' | 'sell'): GroupedOrder[] => {
     const filtered = orders.filter((order) => order.side === side)
@@ -94,5 +115,6 @@ export function useOrderBook() {
     markPrice,
     formatPrice,
     formatAmount,
+    scrollOrdersToCenter,
   }
 }

@@ -30,6 +30,7 @@ vi.mock('../../composables/useOrderBook', () => ({
       }),
     groupSize: ref(0.5),
     groupSizeOptions: [0.5, 1, 2.5, 5, 10, 25, 50, 100],
+    scrollOrdersToCenter: vi.fn(),
   }),
 }))
 
@@ -37,6 +38,7 @@ describe('OrderBook', () => {
   let wrapper: ReturnType<typeof mount>
 
   beforeEach(() => {
+    document.body.innerHTML = ''
     wrapper = mount(OrderBook)
   })
 
@@ -45,7 +47,7 @@ describe('OrderBook', () => {
   })
 
   it('displays sell orders correctly', () => {
-    const sellOrderRows = wrapper.findAll('.flex-1 .text-red-400')
+    const sellOrderRows = wrapper.findAll('[data-test="sell-orders"] .price')
     expect(sellOrderRows).toHaveLength(2)
 
     const sellPrices = sellOrderRows.map((el) => el.text())
@@ -53,12 +55,12 @@ describe('OrderBook', () => {
   })
 
   it('displays buy orders correctly', () => {
-    const buyOrders = wrapper.findAll('.text-green-400')
+    const buyOrders = wrapper.findAll('[data-test="buy-orders"] .price')
     expect(buyOrders).toHaveLength(2)
     expect(buyOrders[0].text()).toBe('20,000.00')
   })
 
   it('shows mark price', () => {
-    expect(wrapper.text()).toContain('Mark: 20,050.00')
+    expect(wrapper.find('[data-test="mark-price"]').text()).toContain('20,050.00')
   })
 })

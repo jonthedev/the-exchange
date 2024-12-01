@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useOrderBook } from '../composables/useOrderBook'
 import GroupSizeSelect from './GroupSizeSelect.vue'
 
@@ -12,11 +13,16 @@ const {
   formatAmount,
   groupSize,
   groupSizeOptions,
+  scrollOrdersToCenter,
 } = useOrderBook()
+
+onMounted(() => {
+  scrollOrdersToCenter()
+})
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-gray-900" data-test="order-book">
+  <div class="flex flex-col h-[800px] bg-gray-900" data-test="order-book">
     <!-- Connection error message -->
     <div v-if="error" class="p-2 bg-red-900/50 text-red-200 text-sm" data-test="error-message">
       Connection error
@@ -36,7 +42,7 @@ const {
       <div class="text-lg">Order Book</div>
       <GroupSizeSelect
         v-model="groupSize"
-        :options="[...groupSizeOptions]"
+        :options="groupSizeOptions"
         data-test="group-size-select"
       />
     </div>
@@ -48,24 +54,27 @@ const {
       <div class="text-right">Total (BTC)</div>
     </div>
 
-    <!-- Sells/Asks -->
-    <div class="flex-1 overflow-auto" data-test="sell-orders">
-      <div
-        v-for="order in sellOrders"
-        :key="order.price"
-        class="grid grid-cols-3 px-4 py-1 text-sm relative group order-row"
-      >
+    <!-- Sells/Asks - Fixed height with scroll -->
+    <div class="h-[300px] overflow-auto scrollbar" data-test="sell-orders">
+      <div class="flex flex-col-reverse">
+        <!-- Reverse to show lowest sells at bottom -->
         <div
-          class="absolute inset-0 bg-red-900/40"
-          :style="{ width: `${order.depth}%`, right: 0 }"
-        ></div>
-        <div class="relative text-left text-red-400 price">{{ formatPrice(order.price) }}</div>
-        <div class="relative text-right text-white amount">{{ formatAmount(order.amount) }}</div>
-        <div class="relative text-right text-white total">{{ formatAmount(order.total) }}</div>
+          v-for="order in sellOrders"
+          :key="order.price"
+          class="grid grid-cols-3 px-4 py-1 text-sm relative group order-row"
+        >
+          <div
+            class="absolute inset-0 bg-red-900/40"
+            :style="{ width: `${order.depth}%`, right: 0 }"
+          ></div>
+          <div class="relative text-left text-red-400 price">{{ formatPrice(order.price) }}</div>
+          <div class="relative text-right text-white amount">{{ formatAmount(order.amount) }}</div>
+          <div class="relative text-right text-white total">{{ formatAmount(order.total) }}</div>
+        </div>
       </div>
     </div>
 
-    <!-- Mark Price -->
+    <!-- Mark Price - stays fixed -->
     <div
       class="flex items-center justify-between px-4 py-1.5 border-y border-gray-800/50 bg-gray-900/50"
       data-test="mark-price"
@@ -74,8 +83,8 @@ const {
       <div class="text-gray-400">Mark: {{ markPrice !== null ? formatPrice(markPrice) : '—' }}</div>
     </div>
 
-    <!-- Buys/Bids -->
-    <div class="flex-1 overflow-auto" data-test="buy-orders">
+    <!-- Buys/Bids - Fixed height with scroll -->
+    <div class="h-[300px] overflow-auto scrollbar" data-test="buy-orders">
       <div
         v-for="order in buyOrders"
         :key="order.price"
@@ -92,3 +101,28 @@ const {
     </div>
   </div>
 </template>
+
+<style scoped>
+.scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background: #374151; /* gray-700 */
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background: #9ca3af; /* gray-400 */
+  border-radius: 3px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db; /* gray-300 */
+}
+
+/* Firefox */
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #374151;
+}
+</style>
