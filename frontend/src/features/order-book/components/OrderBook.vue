@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useOrderBook } from '../composables/useOrderBook'
 import GroupSizeSelect from './GroupSizeSelect.vue'
 
@@ -12,7 +13,12 @@ const {
   formatAmount,
   groupSize,
   groupSizeOptions,
+  scrollOrdersToCenter,
 } = useOrderBook()
+
+onMounted(() => {
+  scrollOrdersToCenter()
+})
 </script>
 
 <template>
@@ -36,7 +42,7 @@ const {
       <div class="text-lg">Order Book</div>
       <GroupSizeSelect
         v-model="groupSize"
-        :options="[...groupSizeOptions]"
+        :options="groupSizeOptions"
         data-test="group-size-select"
       />
     </div>
@@ -97,26 +103,25 @@ const {
 </template>
 
 <style scoped>
+.scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background: #374151; /* gray-700 */
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background: #9ca3af; /* gray-400 */
+  border-radius: 3px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db; /* gray-300 */
+}
+
+/* Firefox */
 .scrollbar {
-  /* For Webkit browsers (Chrome, Safari) */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #374151; /* gray-700 */
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #9ca3af; /* gray-400 */
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: #d1d5db; /* gray-300 */
-  }
-
-  /* For Firefox */
   scrollbar-width: thin;
   scrollbar-color: #9ca3af #374151;
 }

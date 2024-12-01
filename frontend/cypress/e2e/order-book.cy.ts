@@ -78,4 +78,36 @@ describe('Order Book', () => {
       .should('have.attr', 'style')
       .and('include', 'width:')
   })
+
+  it('maintains correct scroll position after initial load', () => {
+    // Check sell orders are scrolled to bottom (or near bottom)
+    cy.get('[data-test="sell-orders"]').then(($el) => {
+      const element = $el[0]
+      const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 50
+      expect(isNearBottom).to.be.true
+    })
+
+    // Check buy orders are scrolled to top
+    cy.get('[data-test="buy-orders"]').then(($el) => {
+      const isAtTop = $el[0].scrollTop < 50
+      expect(isAtTop).to.be.true
+    })
+  })
+
+  it('maintains correct scroll position after group size change', () => {
+    cy.get('[data-test="group-size-select"] select').select('50')
+
+    // Check sell orders are scrolled to bottom (or near bottom)
+    cy.get('[data-test="sell-orders"]').then(($el) => {
+      const element = $el[0]
+      const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 50
+      expect(isNearBottom).to.be.true
+    })
+
+    // Check buy orders are scrolled to top
+    cy.get('[data-test="buy-orders"]').then(($el) => {
+      const isAtTop = $el[0].scrollTop < 50
+      expect(isAtTop).to.be.true
+    })
+  })
 })
