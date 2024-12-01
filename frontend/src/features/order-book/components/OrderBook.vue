@@ -16,21 +16,29 @@ const {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-gray-900">
+  <div class="flex flex-col h-full bg-gray-900" data-test="order-book">
     <!-- Connection error message -->
-    <div v-if="error" class="p-2 bg-red-900/50 text-red-200 text-sm">
-      {{ error }}
+    <div v-if="error" class="p-2 bg-red-900/50 text-red-200 text-sm" data-test="error-message">
+      Connection error
     </div>
 
     <!-- Disconnected message -->
-    <div v-if="!isConnected" class="p-2 bg-yellow-900/50 text-yellow-200 text-sm">
-      Connecting to order book...
+    <div
+      v-if="!isConnected"
+      class="p-2 bg-yellow-900/50 text-yellow-200 text-sm"
+      data-test="connection-status"
+    >
+      Reconnecting
     </div>
 
     <!-- Header with group size -->
     <div class="flex justify-between items-center p-2 border-b border-gray-800/50">
       <div class="text-lg">Order Book</div>
-      <GroupSizeSelect v-model="groupSize" :options="[...groupSizeOptions]" />
+      <GroupSizeSelect
+        v-model="groupSize"
+        :options="[...groupSizeOptions]"
+        data-test="group-size-select"
+      />
     </div>
 
     <!-- Column headers -->
@@ -41,44 +49,45 @@ const {
     </div>
 
     <!-- Sells/Asks -->
-    <div class="flex-1 overflow-auto">
+    <div class="flex-1 overflow-auto" data-test="sell-orders">
       <div
         v-for="order in sellOrders"
         :key="order.price"
-        class="grid grid-cols-3 px-4 py-1 text-sm relative group"
+        class="grid grid-cols-3 px-4 py-1 text-sm relative group order-row"
       >
         <div
           class="absolute inset-0 bg-red-900/40"
           :style="{ width: `${order.depth}%`, right: 0 }"
         ></div>
-        <div class="relative text-left text-red-400">{{ formatPrice(order.price) }}</div>
-        <div class="relative text-right text-white">{{ formatAmount(order.amount) }}</div>
-        <div class="relative text-right text-white">{{ formatAmount(order.total) }}</div>
+        <div class="relative text-left text-red-400 price">{{ formatPrice(order.price) }}</div>
+        <div class="relative text-right text-white amount">{{ formatAmount(order.amount) }}</div>
+        <div class="relative text-right text-white total">{{ formatAmount(order.total) }}</div>
       </div>
     </div>
 
     <!-- Mark Price -->
     <div
       class="flex items-center justify-between px-4 py-1.5 border-y border-gray-800/50 bg-gray-900/50"
+      data-test="mark-price"
     >
       <div class="text-red-400">↓ {{ formatPrice(markPrice || 0) }}</div>
       <div class="text-gray-400">Mark: {{ markPrice !== null ? formatPrice(markPrice) : '—' }}</div>
     </div>
 
     <!-- Buys/Bids -->
-    <div class="flex-1 overflow-auto">
+    <div class="flex-1 overflow-auto" data-test="buy-orders">
       <div
         v-for="order in buyOrders"
         :key="order.price"
-        class="grid grid-cols-3 px-4 py-1 text-sm relative group"
+        class="grid grid-cols-3 px-4 py-1 text-sm relative group order-row"
       >
         <div
           class="absolute inset-0 bg-green-900/40"
           :style="{ width: `${order.depth}%`, right: 0 }"
         ></div>
-        <div class="relative text-left text-green-400">{{ formatPrice(order.price) }}</div>
-        <div class="relative text-right text-white">{{ formatAmount(order.amount) }}</div>
-        <div class="relative text-right text-white">{{ formatAmount(order.total) }}</div>
+        <div class="relative text-left text-green-400 price">{{ formatPrice(order.price) }}</div>
+        <div class="relative text-right text-white amount">{{ formatAmount(order.amount) }}</div>
+        <div class="relative text-right text-white total">{{ formatAmount(order.total) }}</div>
       </div>
     </div>
   </div>
