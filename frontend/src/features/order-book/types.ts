@@ -7,6 +7,15 @@ export type Order = {
   amount: number
 }
 
+export type GroupedOrder = {
+  id: string
+  side: OrderSide
+  price: number
+  amount: number
+  total: number
+  depth: number
+}
+
 export type NewOrder = Omit<Order, 'id'>
 
 export type OrderResponse = {
@@ -20,4 +29,4 @@ export type WebSocketUpdate = {
   delete?: string[]
 }
 
-export type GroupSize = 0.5 | 1 | 2.5 | 5 | 10 | 25 | 50 | 100
+export type GroupSize = 1 | 5 | 10 | 50 | 100

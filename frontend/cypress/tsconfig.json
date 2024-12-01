@@ -1,9 +1,10 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["./e2e/**/*", "./support/**/*"],
-  "exclude": ["./support/component.*"],
   "compilerOptions": {
-    "isolatedModules": false,
-    "types": ["cypress"]
-  }
+    "target": "es5",
+    "lib": ["es5", "dom"],
+    "types": ["cypress", "node"],
+    "isolatedModules": false
+  },
+  "include": ["**/*.ts"]
 }

@@ -1,105 +1,107 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useOrderBook } from '../useOrderBook'
-import { mount, VueWrapper } from '@vue/test-utils'
-import { defineComponent, nextTick } from 'vue'
 import type { Order } from '../../types'
 
-// Mock WebSocket
-class WebSocketMock implements WebSocket {
-  onopen: ((ev: Event) => void) | null = null
-  onmessage: ((ev: MessageEvent) => void) | null = null
-  onclose: ((ev: CloseEvent) => void) | null = null
-  onerror: ((ev: Event) => void) | null = null
-  sentMessages: string[] = []
-  close = vi.fn()
-  readyState = WebSocket.OPEN
-  binaryType: BinaryType = 'blob'
-  bufferedAmount = 0
-  extensions = ''
-  protocol = ''
-  url = ''
-  CLOSED = WebSocket.CLOSED
-  CLOSING = WebSocket.CLOSING
-  CONNECTING = WebSocket.CONNECTING
-  OPEN = WebSocket.OPEN
-
-  constructor(url: string) {
-    this.url = url
-    setTimeout(() => this.onopen?.(new Event('open')), 0)
+// Mock lifecycle hooks to suppress warnings
+vi.mock('vue', async () => {
+  const actual = await vi.importActual('vue')
+  return {
+    ...actual,
+    onMounted: vi.fn(),
+    onUnmounted: vi.fn(),
   }
-
-  send(message: string): void {
-    this.sentMessages.push(message)
-  }
-
-  simulateMessage(data: unknown): void {
-    this.onmessage?.(
-      new MessageEvent('message', {
-        data: JSON.stringify(data),
-      }),
-    )
-  }
-
-  addEventListener(): void {}
-  removeEventListener(): void {}
-  dispatchEvent(): boolean {
-    return true
-  }
-}
-
-const TestComponent = defineComponent({
-  setup() {
-    const orderBook = useOrderBook()
-    return {
-      ...orderBook,
-      wsInstance: orderBook.ws,
-    }
-  },
-  template: '<div></div>',
 })
 
+// We don't need to mount a component to test the composable
 describe('useOrderBook', () => {
-  let wrapper: VueWrapper
-  let mockWs: WebSocketMock
+  let orderBook: ReturnType<typeof useOrderBook>
 
-  beforeEach(async () => {
-    mockWs = new WebSocketMock('ws://localhost:8080')
-    vi.stubGlobal(
-      'WebSocket',
-      vi.fn().mockImplementation(() => mockWs),
-    )
-    wrapper = mount(TestComponent)
-    await nextTick()
+  beforeEach(() => {
+    // Call the composable directly
+    orderBook = useOrderBook()
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-    wrapper.unmount()
+  describe('groupOrders', () => {
+    it('should correctly group orders and calculate depth', () => {
+      orderBook.groupSize.value = 1
+
+      const testOrders = [
+        { id: '1', side: 'sell', price: 100, amount: 1 },
+        { id: '2', side: 'sell', price: 101, amount: 2 },
+        { id: '3', side: 'sell', price: 102, amount: 3 },
+      ] as Order[]
+
+      orderBook.orders.value = testOrders
+
+      const sellOrders = orderBook.sellOrders.value
+      expect(sellOrders).toHaveLength(3)
+      expect(sellOrders[0]).toMatchObject({
+        id: '100',
+        price: 100,
+        amount: 1,
+        total: 1,
+        depth: 100 * (1 / 6),
+        side: 'sell',
+      })
+      expect(sellOrders[2]).toMatchObject({
+        id: '102',
+        price: 102,
+        amount: 3,
+        total: 6,
+        depth: 100,
+        side: 'sell',
+      })
+    })
+
+    it('should respect group size when grouping orders', () => {
+      orderBook.groupSize.value = 5
+
+      const testOrders = [
+        { id: '1', side: 'buy', price: 100, amount: 1 },
+        { id: '2', side: 'buy', price: 102, amount: 2 },
+        { id: '3', side: 'buy', price: 103, amount: 3 },
+      ] as Order[]
+
+      orderBook.orders.value = testOrders
+
+      const buyOrders = orderBook.buyOrders.value
+      expect(buyOrders).toHaveLength(1)
+      expect(buyOrders[0]).toMatchObject({
+        price: 100,
+        amount: 6,
+        total: 6,
+        depth: 100,
+      })
+    })
   })
 
-  it('should group orders by price according to groupSize', async () => {
-    const mockOrders: Order[] = [
-      { id: '1', side: 'sell', price: 20100, amount: 1 },
-      { id: '2', side: 'sell', price: 20150, amount: 2 },
-      { id: '3', side: 'sell', price: 20180, amount: 1.5 },
-    ]
+  describe('markPrice', () => {
+    it('should calculate correct mark price', () => {
+      const testOrders = [
+        { id: '1', side: 'sell', price: 100, amount: 1 },
+        { id: '2', side: 'buy', price: 90, amount: 1 },
+      ] as Order[]
 
-    mockWs.simulateMessage({ existing: mockOrders })
-    await nextTick()
+      orderBook.orders.value = testOrders
 
-    const vm = wrapper.vm as unknown as { sellOrders: Order[]; groupSize: number }
+      expect(orderBook.markPrice.value).toBe(95)
+    })
 
-    expect(vm.sellOrders).toHaveLength(3)
+    it('should return null when no orders exist', () => {
+      orderBook.orders.value = []
+      expect(orderBook.markPrice.value).toBeNull()
+    })
+  })
 
-    vm.groupSize = 100
-    await nextTick()
+  describe('formatting', () => {
+    it('should format price correctly', () => {
+      expect(orderBook.formatPrice(1234.5678)).toBe('1,234.57')
+      expect(orderBook.formatPrice(1000)).toBe('1,000.00')
+    })
 
-    expect(vm.sellOrders).toHaveLength(1)
-    expect(vm.sellOrders[0]).toEqual({
-      id: '20100',
-      side: 'sell',
-      price: 20100,
-      amount: 4.5,
+    it('should format amount correctly', () => {
+      expect(orderBook.formatAmount(1.23456789)).toBe('1.23456789')
+      expect(orderBook.formatAmount(1)).toBe('1.00000000')
     })
   })
 })

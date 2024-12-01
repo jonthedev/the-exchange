@@ -9,15 +9,17 @@
     "dev": "npm-run-all --parallel dev:*",
     "dev:frontend": "npm run dev -w frontend",
     "dev:backend": "npm run dev -w mock_backend",
-    "setup": "npm install && cd frontend && npm install && cd ../mock_backend && npm install",
+    "setup": "npm install && cd frontend && npm install && cypress install && cd ../mock_backend && npm install",
     "clean": "rm -rf node_modules && rm -rf frontend/node_modules && rm -rf mock_backend/node_modules",
     "prepare": "husky install",
     "postinstall": "husky install .husky",
-    "test:e2e": "npm-run-all --parallel --race dev:backend frontend:e2e",
-    "frontend:e2e": "npm run test:e2e:dev -w frontend"
+    "test:e2e": "concurrently \"npm run dev:backend\" \"wait-on tcp:8080 && cd frontend && npm run test:e2e\"",
+    "test:e2e:dev": "concurrently \"npm run dev:backend\" \"wait-on tcp:8080 && cd frontend && npm run test:e2e:dev\""
   },
   "devDependencies": {
+    "concurrently": "^8.0.1",
     "husky": "^8.0.3",
-    "npm-run-all": "^4.1.5"
+    "npm-run-all": "^4.1.5",
+    "wait-on": "^7.2.0"
   }
 }

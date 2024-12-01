@@ -1,53 +1,72 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import type { Order, WebSocketUpdate, GroupSize } from '../types'
+import { ref, watch, computed } from 'vue'
+import { useWebSocket } from '../../../features/websocket/composables/useWebSocket'
+import type { Order, GroupSize, GroupedOrder } from '../types'
 
 export function useOrderBook() {
   const orders = ref<Order[]>([])
-  const isConnected = ref(false)
-  const error = ref('')
-  const groupSize = ref<GroupSize>(0.5)
-  let ws: WebSocket | null = null
+  const groupSize = ref<GroupSize>(1)
+  const groupSizeOptions = [1, 5, 10, 50, 100] as const
 
-  const groupSizeOptions: GroupSize[] = [0.5, 1, 2.5, 5, 10, 25, 50, 100]
+  const { data, isConnected, error } = useWebSocket('ws://localhost:8080')
 
-  const groupOrders = (orders: Order[]) => {
-    const grouped = new Map<number, number>()
+  watch(data, (newData) => {
+    if (!newData) return
 
-    orders.forEach((order) => {
+    if (newData.existing) {
+      orders.value = newData.existing
+    }
+    if (newData.insert) {
+      orders.value = [...orders.value, ...newData.insert]
+    }
+    if (newData.delete) {
+      orders.value = orders.value.filter((order) => !newData.delete?.includes(order.id))
+    }
+  })
+
+  const groupOrders = (orders: Order[], side: 'buy' | 'sell'): GroupedOrder[] => {
+    const filtered = orders.filter((order) => order.side === side)
+    const grouped = filtered.reduce<Record<number, GroupedOrder>>((acc, order) => {
       const groupedPrice = Math.floor(order.price / groupSize.value) * groupSize.value
-      const currentAmount = grouped.get(groupedPrice) || 0
-      grouped.set(groupedPrice, currentAmount + order.amount)
+
+      if (!acc[groupedPrice]) {
+        acc[groupedPrice] = {
+          id: groupedPrice.toString(),
+          side,
+          price: groupedPrice,
+          amount: 0,
+          total: 0,
+          depth: 0,
+        }
+      }
+
+      acc[groupedPrice].amount += order.amount
+      return acc
+    }, {})
+
+    const result = Object.values(grouped)
+    let runningTotal = 0
+    const sorted = result.sort((a, b) => (side === 'sell' ? a.price - b.price : b.price - a.price))
+
+    sorted.forEach((order) => {
+      runningTotal += order.amount
+      order.total = runningTotal
     })
 
-    return Array.from(grouped.entries()).map(([price, amount]) => ({
-      id: price.toString(),
-      price,
-      amount,
-      side: orders[0].side,
-    }))
+    const maxTotal = Math.max(...sorted.map((order) => order.total))
+    sorted.forEach((order) => {
+      order.depth = (order.total / maxTotal) * 100
+    })
+
+    return sorted
   }
 
-  // Update computed properties to use grouping
-  const sellOrders = computed(() => {
-    const filtered = orders.value.filter((o) => o.side === 'sell')
-    const grouped = groupOrders(filtered)
-    return grouped.sort((a, b) => a.price - b.price).slice(0, 12)
-  })
-
-  const buyOrders = computed(() => {
-    const filtered = orders.value.filter((o) => o.side === 'buy')
-    const grouped = groupOrders(filtered)
-    return grouped.sort((a, b) => b.price - a.price).slice(0, 12)
-  })
+  const buyOrders = computed(() => groupOrders(orders.value, 'buy'))
+  const sellOrders = computed(() => groupOrders(orders.value, 'sell'))
 
   const markPrice = computed(() => {
-    const lowestSell = sellOrders.value[0]?.price
-    const highestBuy = buyOrders.value[0]?.price
-
-    if (lowestSell && highestBuy) {
-      return (lowestSell + highestBuy) / 2
-    }
-    return null
+    const highestBuy = buyOrders.value[0]?.price || 0
+    const lowestSell = sellOrders.value[0]?.price || 0
+    return highestBuy && lowestSell ? (highestBuy + lowestSell) / 2 : null
   })
 
   const formatPrice = (price: number) => {
@@ -64,56 +83,15 @@ export function useOrderBook() {
     })
   }
 
-  // WebSocket setup
-  onMounted(() => {
-    ws = new WebSocket('ws://localhost:8080')
-
-    ws.onopen = () => {
-      isConnected.value = true
-    }
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data) as WebSocketUpdate
-
-      if (data.existing) {
-        orders.value = data.existing
-      }
-      if (data.insert) {
-        orders.value = [...orders.value, ...data.insert]
-      }
-      if (data.delete) {
-        orders.value = orders.value.filter((order) => !data.delete?.includes(order.id))
-      }
-    }
-
-    ws.onclose = () => {
-      isConnected.value = false
-    }
-
-    ws.onerror = () => {
-      error.value = 'Connection error'
-    }
-  })
-
-  onUnmounted(() => {
-    ws?.close()
-  })
-
   return {
-    // State
     orders,
     isConnected,
     error,
-    ws,
     groupSize,
     groupSizeOptions,
-
-    // Computed
     sellOrders,
     buyOrders,
     markPrice,
-
-    // Methods
     formatPrice,
     formatAmount,
   }
