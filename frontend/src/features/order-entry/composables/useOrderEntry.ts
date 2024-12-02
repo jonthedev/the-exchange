@@ -22,7 +22,7 @@ export function useOrderEntry(): UseOrderEntryReturn {
     }
 
     // Amount validation
-    if (!amount.value) {
+    if (!amount.value && amount.value !== 0) {
       errors.value.amount.push('Amount is required')
       isValid = false
     } else if (amount.value <= 0) {
