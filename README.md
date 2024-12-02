@@ -2,6 +2,24 @@
 
 A simplified cryptocurrency exchange order entry form and an order book view.
 
+### Features
+
+**Order Entry**
+
+- Buy/Sell order submission
+- Real-time price and amount validation
+- Responsive UI with clear feedback
+- Integration with order book price selection
+
+**Order Book**
+
+- Real-time order updates via WebSocket
+- Customizable price grouping (1, 5, 10, 50, 100)
+- Mark price display (average of best bid/ask)
+- Visual depth indication for order volumes
+- Auto-scrolling to best prices
+- Separate scrollable views for buy/sell orders
+
 ### Technology Stack
 
 **Frontend**
@@ -66,6 +84,26 @@ If you want to start the frontend only, you can run:
 
 ```bash
 npm run dev:frontend
+```
+
+## Testing
+
+Run all unit tests:
+
+```bash
+npm run test
+```
+
+Run frontend unit tests:
+
+```bash
+npm run test:unit
+```
+
+Run end-to-end tests:
+
+```bash
+npm run test:e2e
 ```
 
 ## Cleaning
