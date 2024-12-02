@@ -1,21 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { OrderSide } from '../../order-book/types'
+import { useOrderEntry } from '../composables/useOrderEntry'
 
-const side = ref<OrderSide>('buy')
-const price = ref<number | null>(null)
-const amount = ref<number | null>(null)
-
-const handleSubmit = () => {
-  if (!price.value || !amount.value) return
-
-  // TODO: Implement order submission
-  console.log({
-    side: side.value,
-    price: price.value,
-    amount: amount.value,
-  })
-}
+const { side, price, amount, errors, isValid, handleSubmit } = useOrderEntry()
 </script>
 
 <template>
@@ -60,10 +46,14 @@ const handleSubmit = () => {
         type="number"
         step="0.01"
         min="0"
-        class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+        class="w-full bg-gray-800 border rounded px-3 py-2 text-white"
+        :class="[errors.price.length ? 'border-red-500' : 'border-gray-700']"
         placeholder="0.00"
         data-test="price-input"
       />
+      <div v-if="errors.price.length" class="mt-1 text-sm text-red-500" data-test="price-error">
+        {{ errors.price[0] }}
+      </div>
     </div>
 
     <!-- Amount Input -->
@@ -74,20 +64,25 @@ const handleSubmit = () => {
         type="number"
         step="0.00000001"
         min="0"
-        class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+        class="w-full bg-gray-800 border rounded px-3 py-2 text-white"
+        :class="[errors.amount.length ? 'border-red-500' : 'border-gray-700']"
         placeholder="0.00000000"
         data-test="amount-input"
       />
+      <div v-if="errors.amount.length" class="mt-1 text-sm text-red-500" data-test="amount-error">
+        {{ errors.amount[0] }}
+      </div>
     </div>
 
     <!-- Submit Button -->
     <button
       type="submit"
-      class="w-full py-2 px-4 rounded font-medium"
+      class="w-full py-2 px-4 rounded font-medium disabled:opacity-50"
       :class="[
         side === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700',
         'text-white',
       ]"
+      :disabled="!isValid"
       data-test="submit-button"
     >
       {{ side === 'buy' ? 'Buy' : 'Sell' }} BTC
